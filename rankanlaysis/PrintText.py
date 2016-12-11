@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
+import itertools
 
 
 def season_import(season_path):
     result_ts = pd.read_csv(season_path)
     season = result_ts.loc[result_ts['year'] == 2016]
-    season.drop(labels='Unnamed: 0', axis=1, inplace=True)
-    print(season)
+    season = season.drop(labels='Unnamed: 0', axis=1)
 
     return season
 
@@ -87,17 +87,26 @@ def main():
     score_path = './data/result/calc_prob.csv'
     season_data = season_import(season_path)
     score_data = score_import(score_path)
-    game_idx = 122
-    team = 'LG'
 
-    rank, wdf_higher, wdf_lower = extract_information(season_data, game_idx, team)
-    higher_prob, lower_prob = calc_prob(score_data, game_idx, rank, wdf_higher, wdf_lower)
-    higher_prob *= 100
-    lower_prob *= 100
+    idx_range = range(1, 145)
+    team_list = ['NC', '두산', 'LG', '넥센', '롯데', 'SK', 'kt', '삼성', '한화', 'KIA']
 
-    print('현재 %s의 %d 경기 시점에서의 순위는 %d(위)이며, 아래 팀과의 승차는 %.2f, 위 팀과의 승차는 %.2f 입니다.'
-          % (team, game_idx, rank, wdf_lower, wdf_higher))
-    print_text(game_idx, higher_prob, lower_prob)
+    for element in list(itertools.product(idx_range, team_list)):
+        try:
+            game_idx = element[0]
+            team = element[1]
+
+            rank, wdf_higher, wdf_lower = extract_information(season_data, game_idx, team)
+            higher_prob, lower_prob = calc_prob(score_data, game_idx, rank, wdf_higher, wdf_lower)
+            higher_prob *= 100
+            lower_prob *= 100
+
+            # print('현재 %s의 %d 경기 시점에서의 순위는 %d(위)이며, 아래 팀과의 승차는 %.2f, 위 팀과의 승차는 %.2f 입니다.'
+            #       % (team, game_idx, rank, wdf_lower, wdf_higher))
+            print_text(game_idx, higher_prob, lower_prob)
+
+        except IndexError:
+            print(element[0], element[1])
 
 if __name__ == '__main__':
     main()
